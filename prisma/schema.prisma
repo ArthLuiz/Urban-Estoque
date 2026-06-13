@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(ADMIN)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  movements StockMovement[]
+
+  @@map("users")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  sku         String   @unique
+  quantity    Int      @default(0)
+  minQuantity Int      @default(0)
+  unit        String   @default("un")
+  category    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  movements StockMovement[]
+
+  @@map("products")
+}
+
+model StockMovement {
+  id          String       @id @default(cuid())
+  type        MovementType
+  quantity    Int
+  reason      String?
+  destination String?      // para onde foi (apto, bloco, etc) — usado nas saídas
+  recipient   String?      // quem recebeu — usado nas saídas
+  createdAt   DateTime     @default(now())
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@map("stock_movements")
+}
+
+enum Role {
+  SUPERADMIN
+  ADMIN
+}
+
+enum MovementType {
+  ENTRADA
+  SAIDA
+}
